@@ -1,10 +1,10 @@
 === Sell Photo ===
 Contributors: naa986
 Donate link: https://noorsplugin.com/
-Tags: photo, photos, gallery, photo gallery, photogallery, image, images, photo album, photo albums, picture, pictures, album, photoalbum, image album, image gallery, paypal, photography, sell photos, selling, commerce, e-commerce, sell 
+Tags: photo, sell photos, gallery, paypal, photography
 Requires at least: 4.2
 Tested up to: 4.7
-Stable tag: 1.0.4
+Stable tag: 1.0.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -64,6 +64,9 @@ For screenshots please visit the [WordPress Sell Photo](https://noorsplugin.com/
 none
 
 == Changelog ==
+
+= 1.0.5 =
+* Photo Gallery is now compatible with WordPress 4.8
 
 = 1.0.4 =
 * Added translation option

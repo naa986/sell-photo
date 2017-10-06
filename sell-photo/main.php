@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Sell Photo
-Version: 1.0.4
+Version: 1.0.5
 Plugin URI: http://noorsplugin.com/sell-photo/
 Author: naa986
 Author URI: http://noorsplugin.com/
@@ -15,7 +15,7 @@ if(!class_exists('SELL_PHOTO'))
 {
     class SELL_PHOTO
     {
-        var $plugin_version = '1.0.4';
+        var $plugin_version = '1.0.5';
         var $plugin_url;
         var $plugin_path;
         function __construct()
@@ -286,7 +286,7 @@ function sell_photo_gallery($output, $attr, $instance)
 	$gallery_style = '';
 
 	/**
-	 * Filter whether to print default gallery styles.
+	 * Filters whether to print default gallery styles.
 	 *
 	 * @since 3.1.0
 	 *
@@ -320,7 +320,7 @@ function sell_photo_gallery($output, $attr, $instance)
 	$gallery_div = "<div id='$selector' class='gallery galleryid-{$id} gallery-columns-{$columns} gallery-size-{$size_class}'>";
 
 	/**
-	 * Filter the default gallery shortcode CSS styles.
+	 * Filters the default gallery shortcode CSS styles.
 	 *
 	 * @since 2.5.0
 	 *
