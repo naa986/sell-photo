@@ -2,8 +2,8 @@
 Contributors: naa986
 Donate link: https://noorsplugin.com/
 Tags: photo, sell photos, gallery, paypal, photography
-Requires at least: 4.2
-Tested up to: 4.7
+Requires at least: 4.8
+Tested up to: 4.8
 Stable tag: 1.0.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
