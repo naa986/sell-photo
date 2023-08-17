@@ -2,9 +2,9 @@
 Contributors: naa986
 Donate link: https://noorsplugin.com/
 Tags: e-commerce, ecommerce, sales, sell, store
-Requires at least: 4.8
-Tested up to: 5.1
-Stable tag: 1.0.5
+Requires at least: 6.3
+Tested up to: 6.3
+Stable tag: 1.0.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -64,6 +64,9 @@ For screenshots please visit the [WordPress Sell Photo](https://noorsplugin.com/
 none
 
 == Changelog ==
+
+= 1.0.6 =
+* WordPress 6.3 compatibility update.
 
 = 1.0.5 =
 * Photo Gallery is now compatible with WordPress 4.8

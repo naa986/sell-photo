@@ -1,10 +1,10 @@
 <?php
 /*
 Plugin Name: Sell Photo
-Version: 1.0.5
-Plugin URI: http://noorsplugin.com/sell-photo/
+Version: 1.0.6
+Plugin URI: https://noorsplugin.com/sell-photo/
 Author: naa986
-Author URI: http://noorsplugin.com/
+Author URI: https://noorsplugin.com/
 Description: Sell photo beautifully in WordPress
 Text Domain: sell-photo
 Domain Path: /languages
@@ -15,7 +15,7 @@ if(!class_exists('SELL_PHOTO'))
 {
     class SELL_PHOTO
     {
-        var $plugin_version = '1.0.5';
+        var $plugin_version = '1.0.6';
         var $plugin_url;
         var $plugin_path;
         function __construct()
@@ -26,7 +26,7 @@ if(!class_exists('SELL_PHOTO'))
             define('SELL_PHOTO_PATH', $this->plugin_path());
             $this->plugin_includes();
             $this->loader_operations();
-            add_action( 'wp_enqueue_scripts', array($this, 'plugin_scripts' ), 0 );
+            //add_action( 'wp_enqueue_scripts', array($this, 'plugin_scripts' ), 0 );
         }
         function plugin_includes()
         {
@@ -104,24 +104,31 @@ if(!class_exists('SELL_PHOTO'))
         }
         function options_page()
         {
-            $wpvl_plugin_tabs = array(
+            $plugin_tabs = array(
                 'sell-photo-settings' => __('General', 'sell-photo')
             );
-            $url = "http://noorsplugin.com/sell-photo/";
-            $link_text = sprintf(wp_kses(__('Please visit the <a target="_blank" href="%s">Sell Photo</a> documentation page for usage instructions.', 'sell-photo'), array('a' => array('href' => array(), 'target' => array()))), esc_url($url));
-            echo '<div class="wrap">'.screen_icon().'<h2>Sell Photo v'.SELL_PHOTO_VERSION.'</h2>';
-            echo '<div class="update-nag">'.$link_text.'</div>';
-            echo '<div id="poststuff"><div id="post-body">';  
-
+            $url = "https://noorsplugin.com/sell-photo/";
+            $link_text = sprintf(__('Please visit the <a target="_blank" href="%s">Sell Photo</a> documentation page for instructions.', 'sell-photo'), esc_url($url));
+            $allowed_html_tags = array(
+                'a' => array(
+                    'href' => array(),
+                    'target' => array()
+                )
+            );
+            echo '<div class="wrap"><h2>Sell Photo v'.SELL_PHOTO_VERSION.'</h2>';
+            echo '<div class="update-nag">'.wp_kses($link_text, $allowed_html_tags).'</div>'; 
+            $current = '';
+            $action = '';
             if(isset($_GET['page'])){
-                $current = $_GET['page'];
+                $current = sanitize_text_field($_GET['page']);
                 if(isset($_GET['action'])){
-                    $current .= "&action=".$_GET['action'];
+                    $action = sanitize_text_field($_GET['action']);
+                    $current .= "&action=".$action;
                 }
             }
             $content = '';
             $content .= '<h2 class="nav-tab-wrapper">';
-            foreach($wpvl_plugin_tabs as $location => $tabname)
+            foreach($plugin_tabs as $location => $tabname)
             {
                 if($current == $location){
                     $class = ' nav-tab-active';
@@ -131,11 +138,20 @@ if(!class_exists('SELL_PHOTO'))
                 $content .= '<a class="nav-tab'.$class.'" href="?page='.$location.'">'.$tabname.'</a>';
             }
             $content .= '</h2>';
-            echo $content;
+            $allowed_html_tags = array(
+                'a' => array(
+                    'href' => array(),
+                    'class' => array()
+                ),
+                'h2' => array(
+                    'href' => array(),
+                    'class' => array()
+                )
+            );
+            echo wp_kses($content, $allowed_html_tags);
 
             $this->general_settings();
 
-            echo '</div></div>';
             echo '</div>';
         }
         function general_settings()
@@ -146,19 +162,40 @@ if(!class_exists('SELL_PHOTO'))
                 if ( !wp_verify_nonce($nonce, 'sell_photo_general_settings')){
                         wp_die('Error! Nonce Security Check Failed! please save the settings again.');
                 }
-                update_option('sell_photo_enable_testmode', ($_POST["enable_testmode"]=='1')?'1':'');
-                update_option('sell_photo_paypal_email', trim($_POST["paypal_email"]));
-                update_option('sell_photo_currency_code', trim($_POST["currency_code"]));
-                update_option('sell_photo_price_amount', trim($_POST["price_amount"]));
-                update_option('sell_photo_button_anchor', trim($_POST["button_anchor"]));
-                update_option('sell_photo_return_url', trim($_POST["return_url"]));
+                $enable_testmode = (isset($_POST["enable_testmode"]) && $_POST["enable_testmode"] == '1') ? '1' : '';
+                update_option('sell_photo_enable_testmode', $enable_testmode);
+                update_option('sell_photo_paypal_email', sanitize_email($_POST["paypal_email"]));
+                update_option('sell_photo_currency_code', sanitize_text_field($_POST["currency_code"]));
+                update_option('sell_photo_price_amount', sanitize_text_field($_POST["price_amount"]));
+                $button_anchor = '';
+                if(filter_var($_POST["button_anchor"], FILTER_VALIDATE_URL)){
+                    $button_anchor = esc_url_raw($_POST["button_anchor"]);
+                }
+                else{
+                    $button_anchor = sanitize_text_field($_POST["button_anchor"]);
+                }
+                update_option('sell_photo_button_anchor', $button_anchor);
+                update_option('sell_photo_return_url', esc_url_raw($_POST["return_url"]));
                 echo '<div id="message" class="updated fade"><p><strong>';
-                echo 'Settings Saved!';
+                echo __('Settings Saved', 'sell-photo').'!';
                 echo '</strong></p></div>';
+            }
+            $testmode = get_option('sell_photo_enable_testmode');
+            $btn_anchor = get_option('sell_photo_button_anchor');
+            if(isset($btn_anchor) && !empty($btn_anchor)){
+                if(filter_var($btn_anchor, FILTER_VALIDATE_URL)){
+                    $button_anchor = esc_url($btn_anchor);
+                }
+                else{
+                    $button_anchor = esc_attr($btn_anchor);
+                }
+            }
+            else{
+                $btn_anchor = '';
             }
             ?>
 
-            <form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
+            <form method="post" action="">
             <?php wp_nonce_field('sell_photo_general_settings'); ?>
 
             <table class="form-table">
@@ -166,40 +203,40 @@ if(!class_exists('SELL_PHOTO'))
             <tbody>
 
             <tr valign="top">
-            <th scope="row">Enable Test Mode</th>
+            <th scope="row"><?php _e('Enable Test Mode', 'sell-photo');?></th>
             <td> <fieldset><legend class="screen-reader-text"><span>Enable Test Mode</span></legend><label for="enable_testmode">
-            <input name="enable_testmode" type="checkbox" id="enable_testmode" <?php if(get_option('sell_photo_enable_testmode')== '1') echo ' checked="checked"';?> value="1">
+            <input name="enable_testmode" type="checkbox" id="enable_testmode" <?php if(isset($testmode) && $testmode == '1') echo ' checked="checked"';?> value="1">
             <?php _e('Check this option if you want to enable PayPal sandbox for testing', 'sell-photo');?></label>
             </fieldset></td>
             </tr>
             
             <tr valign="top">
-            <th scope="row"><label for="paypal_email">PayPal Email</label></th>
-            <td><input name="paypal_email" type="text" id="paypal_email" value="<?php echo get_option('sell_photo_paypal_email'); ?>" class="regular-text">
+            <th scope="row"><label for="paypal_email"><?php _e('PayPal Email', 'sell-photo');?></label></th>
+            <td><input name="paypal_email" type="text" id="paypal_email" value="<?php echo esc_attr(get_option('sell_photo_paypal_email')); ?>" class="regular-text">
             <p class="description"><?php _e('Your PayPal email address', 'sell-photo');?></p></td>
             </tr>
 
             <tr valign="top">
-            <th scope="row"><label for="currency_code">Currency Code</label></th>
-            <td><input name="currency_code" type="text" id="currency_code" value="<?php echo get_option('sell_photo_currency_code'); ?>" class="regular-text">
+            <th scope="row"><label for="currency_code"><?php _e('Currency Code', 'sell-photo');?></label></th>
+            <td><input name="currency_code" type="text" id="currency_code" value="<?php echo esc_attr(get_option('sell_photo_currency_code')); ?>" class="regular-text">
             <p class="description"><?php _e('The currency of the payment. For example: ', 'sell-photo');?>USD, CAD, GBP, EUR</p></td>
             </tr>
             
             <tr valign="top">
-            <th scope="row"><label for="price_amount">Price Amount</label></th>
-            <td><input name="price_amount" type="text" id="price_amount" value="<?php echo get_option('sell_photo_price_amount'); ?>" class="regular-text">
+            <th scope="row"><label for="price_amount"><?php _e('Price Amount', 'sell-photo');?></label></th>
+            <td><input name="price_amount" type="text" id="price_amount" value="<?php echo esc_attr(get_option('sell_photo_price_amount')); ?>" class="regular-text">
             <p class="description"><?php _e('The default price of each gallery photo. For example: ', 'sell-photo');?>2.00</p></td>
             </tr>
             
             <tr valign="top">
-            <th scope="row"><label for="button_anchor">Button Text/Image</label></th>
-            <td><input name="button_anchor" type="text" id="button_anchor" value="<?php echo get_option('sell_photo_button_anchor'); ?>" class="regular-text">
+            <th scope="row"><label for="button_anchor"><?php _e('Button Text/Image', 'sell-photo');?></label></th>
+            <td><input name="button_anchor" type="text" id="button_anchor" value="<?php echo $btn_anchor; ?>" class="regular-text">
             <p class="description"><?php _e('The text for the Buy button. To use an image you can enter a URL instead', 'sell-photo');?></p></td>
             </tr>
             
             <tr valign="top">
-            <th scope="row"><label for="return_url">Return URL</label></th>
-            <td><input name="return_url" type="text" id="return_url" value="<?php echo get_option('sell_photo_return_url'); ?>" class="regular-text">
+            <th scope="row"><label for="return_url"><?php _e('Return URL', 'sell-photo');?></label></th>
+            <td><input name="return_url" type="text" id="return_url" value="<?php echo esc_url(get_option('sell_photo_return_url')); ?>" class="regular-text">
             <p class="description"><?php _e('The URL to which the user will be redirected after the payment', 'sell-photo');?></p></td>
             </tr>
 
@@ -219,36 +256,68 @@ function sell_photo_gallery($output, $attr, $instance)
 {
     	$post = get_post();
         
-	$html5 = current_theme_supports( 'html5', 'gallery' );
-	$atts = shortcode_atts( array(
-		'order'      => 'ASC',
-		'orderby'    => 'menu_order ID',
-		'id'         => $post ? $post->ID : 0,
-		'itemtag'    => $html5 ? 'figure'     : 'dl',
-		'icontag'    => $html5 ? 'div'        : 'dt',
-		'captiontag' => $html5 ? 'figcaption' : 'dd',
-		'columns'    => 3,
-		'size'       => 'thumbnail',
-		'include'    => '',
-		'exclude'    => '',
-		'link'       => '',
-                'sell_photo' => '', // use this parameter to enable photo selling functionality for this gallery
-                'price'      => ''  //override the settings price to use a different one for this gallery
-	), $attr, 'gallery' );
+        $html5 = current_theme_supports( 'html5', 'gallery' );
+	$atts  = shortcode_atts(
+		array(
+			'order'      => 'ASC',
+			'orderby'    => 'menu_order ID',
+			'id'         => $post ? $post->ID : 0,
+			'itemtag'    => $html5 ? 'figure' : 'dl',
+			'icontag'    => $html5 ? 'div' : 'dt',
+			'captiontag' => $html5 ? 'figcaption' : 'dd',
+			'columns'    => 3,
+			'size'       => 'thumbnail',
+			'include'    => '',
+			'exclude'    => '',
+			'link'       => '',
+                        'sell_photo' => '', // use this parameter to enable photo selling functionality for this gallery
+                        'price'      => ''  //override the settings price to use a different one for this gallery
+		),
+		$attr,
+		'gallery'
+	);
 
-	$id = intval( $atts['id'] );
+	$id = (int) $atts['id'];
 
 	if ( ! empty( $atts['include'] ) ) {
-		$_attachments = get_posts( array( 'include' => $atts['include'], 'post_status' => 'inherit', 'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $atts['order'], 'orderby' => $atts['orderby'] ) );
+		$_attachments = get_posts(
+			array(
+				'include'        => $atts['include'],
+				'post_status'    => 'inherit',
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'image',
+				'order'          => $atts['order'],
+				'orderby'        => $atts['orderby'],
+			)
+		);
 
 		$attachments = array();
 		foreach ( $_attachments as $key => $val ) {
-			$attachments[$val->ID] = $_attachments[$key];
+			$attachments[ $val->ID ] = $_attachments[ $key ];
 		}
 	} elseif ( ! empty( $atts['exclude'] ) ) {
-		$attachments = get_children( array( 'post_parent' => $id, 'exclude' => $atts['exclude'], 'post_status' => 'inherit', 'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $atts['order'], 'orderby' => $atts['orderby'] ) );
+		$attachments = get_children(
+			array(
+				'post_parent'    => $id,
+				'exclude'        => $atts['exclude'],
+				'post_status'    => 'inherit',
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'image',
+				'order'          => $atts['order'],
+				'orderby'        => $atts['orderby'],
+			)
+		);
 	} else {
-		$attachments = get_children( array( 'post_parent' => $id, 'post_status' => 'inherit', 'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $atts['order'], 'orderby' => $atts['orderby'] ) );
+		$attachments = get_children(
+			array(
+				'post_parent'    => $id,
+				'post_status'    => 'inherit',
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'image',
+				'order'          => $atts['order'],
+				'orderby'        => $atts['orderby'],
+			)
+		);
 	}
 
 	if ( empty( $attachments ) ) {
@@ -258,14 +327,23 @@ function sell_photo_gallery($output, $attr, $instance)
 	if ( is_feed() ) {
 		$output = "\n";
 		foreach ( $attachments as $att_id => $attachment ) {
-			$output .= wp_get_attachment_link( $att_id, $atts['size'], true ) . "\n";
+			if ( ! empty( $atts['link'] ) ) {
+				if ( 'none' === $atts['link'] ) {
+					$output .= wp_get_attachment_image( $att_id, $atts['size'], false, $attr );
+				} else {
+					$output .= wp_get_attachment_link( $att_id, $atts['size'], false );
+				}
+			} else {
+				$output .= wp_get_attachment_link( $att_id, $atts['size'], true );
+			}
+			$output .= "\n";
 		}
 		return $output;
 	}
 
-	$itemtag = tag_escape( $atts['itemtag'] );
+	$itemtag    = tag_escape( $atts['itemtag'] );
 	$captiontag = tag_escape( $atts['captiontag'] );
-	$icontag = tag_escape( $atts['icontag'] );
+	$icontag    = tag_escape( $atts['icontag'] );
 	$valid_tags = wp_kses_allowed_html( 'post' );
 	if ( ! isset( $valid_tags[ $itemtag ] ) ) {
 		$itemtag = 'dl';
@@ -277,9 +355,9 @@ function sell_photo_gallery($output, $attr, $instance)
 		$icontag = 'dt';
 	}
 
-	$columns = intval( $atts['columns'] );
-	$itemwidth = $columns > 0 ? floor(100/$columns) : 100;
-	$float = is_rtl() ? 'right' : 'left';
+	$columns   = (int) $atts['columns'];
+	$itemwidth = $columns > 0 ? floor( 100 / $columns ) : 100;
+	$float     = is_rtl() ? 'right' : 'left';
 
 	$selector = "gallery-{$instance}";
 
@@ -295,8 +373,10 @@ function sell_photo_gallery($output, $attr, $instance)
 	 *                    Otherwise, defaults to true.
 	 */
 	if ( apply_filters( 'use_default_gallery_style', ! $html5 ) ) {
+		$type_attr = current_theme_supports( 'html5', 'style' ) ? '' : ' type="text/css"';
+
 		$gallery_style = "
-		<style type='text/css'>
+		<style{$type_attr}>
 			#{$selector} {
 				margin: auto;
 			}
@@ -316,7 +396,7 @@ function sell_photo_gallery($output, $attr, $instance)
 		</style>\n\t\t";
 	}
 
-	$size_class = sanitize_html_class( $atts['size'] );
+	$size_class  = sanitize_html_class( is_array( $atts['size'] ) ? implode( 'x', $atts['size'] ) : $atts['size'] );
 	$gallery_div = "<div id='$selector' class='gallery galleryid-{$id} gallery-columns-{$columns} gallery-size-{$size_class}'>";
 
 	/**
@@ -330,9 +410,11 @@ function sell_photo_gallery($output, $attr, $instance)
 	$output = apply_filters( 'gallery_style', $gallery_style . $gallery_div );
 
 	$i = 0;
+
 	foreach ( $attachments as $id => $attachment ) {
 
 		$attr = ( trim( $attachment->post_excerpt ) ) ? array( 'aria-describedby' => "$selector-$id" ) : '';
+
 		if ( ! empty( $atts['link'] ) && 'file' === $atts['link'] ) {
 			$image_output = wp_get_attachment_link( $id, $atts['size'], false, false, false, $attr );
 		} elseif ( ! empty( $atts['link'] ) && 'none' === $atts['link'] ) {
@@ -340,38 +422,43 @@ function sell_photo_gallery($output, $attr, $instance)
 		} else {
 			$image_output = wp_get_attachment_link( $id, $atts['size'], true, false, false, $attr );
 		}
-		$image_meta  = wp_get_attachment_metadata( $id );
+
+		$image_meta = wp_get_attachment_metadata( $id );
 
 		$orientation = '';
+
 		if ( isset( $image_meta['height'], $image_meta['width'] ) ) {
 			$orientation = ( $image_meta['height'] > $image_meta['width'] ) ? 'portrait' : 'landscape';
 		}
+
 		$output .= "<{$itemtag} class='gallery-item'>";
 		$output .= "
 			<{$icontag} class='gallery-icon {$orientation}'>
 				$image_output
 			</{$icontag}>";
-		if ( $captiontag && trim($attachment->post_excerpt) ) {
+
+		if ( $captiontag && trim( $attachment->post_excerpt ) ) {
 			$output .= "
 				<{$captiontag} class='wp-caption-text gallery-caption' id='$selector-$id'>
-				" . wptexturize($attachment->post_excerpt) . "
+				" . wptexturize( $attachment->post_excerpt ) . "
 				</{$captiontag}>";
 		}
                 /*display button for each photo */
                 if(!empty($atts['sell_photo'])){
                     $title = $attachment->post_title;  
-                    $price = $atts['price'];
+                    $price = sanitize_text_field($atts['price']);
                     $button = sell_photo_get_button_code_for_paypal($title, $price);
                     $output .= $button;
                 }
                 /* end of button code */
 		$output .= "</{$itemtag}>";
-		if ( ! $html5 && $columns > 0 && ++$i % $columns == 0 ) {
+
+		if ( ! $html5 && $columns > 0 && 0 === ++$i % $columns ) {
 			$output .= '<br style="clear: both" />';
 		}
 	}
 
-	if ( ! $html5 && $columns > 0 && $i % $columns !== 0 ) {
+	if ( ! $html5 && $columns > 0 && 0 !== $i % $columns ) {
 		$output .= "
 			<br style='clear: both' />";
 	}
@@ -400,19 +487,21 @@ function sell_photo_get_button_code_for_paypal($item_name, $price)
     $button = get_option('sell_photo_button_anchor');
     $image_button = strstr($button, 'http');
     if($image_button==FALSE){
-        $button = '<input type="submit" class="sell_photo_button" value="'.$button.'">';	
+        $button = '<input type="submit" class="sell_photo_button" value="'.esc_attr($button).'">';	
     }
     else{
-        $button = '<input type="image" src="'.$button.'" border="0" name="submit" alt="'.$item_name.'">';
+        $button = '<input type="image" src="'.esc_url($button).'" border="0" name="submit" alt="'.esc_attr($item_name).'">';
     }
+    $esc_attr = 'esc_attr';
+    $esc_url = 'esc_url';
     $button_code = <<<EOT
     <form method="post" action="$url">
     <input type="hidden" name="cmd" value="_xclick">
-    <input type="hidden" name="business" value="$paypal_email">
-    <input type="hidden" name="item_name" value="$item_name">
-    <input type="hidden" name="amount" value="$amount">
-    <input type="hidden" name="currency_code" value="$currency">
-    <input type="hidden" name="return" value="$return_url">
+    <input type="hidden" name="business" value="{$esc_attr($paypal_email)}">
+    <input type="hidden" name="item_name" value="{$esc_attr($item_name)}">
+    <input type="hidden" name="amount" value="{$esc_attr($amount)}">
+    <input type="hidden" name="currency_code" value="{$esc_attr($currency)}">
+    <input type="hidden" name="return" value="{$esc_url($return_url)}">
     $button
     </form>
 EOT;
