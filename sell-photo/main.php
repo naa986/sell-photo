@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Sell Photo
-Version: 1.0.6
+Version: 1.0.7
 Plugin URI: https://noorsplugin.com/sell-photo/
 Author: naa986
 Author URI: https://noorsplugin.com/
@@ -15,7 +15,7 @@ if(!class_exists('SELL_PHOTO'))
 {
     class SELL_PHOTO
     {
-        var $plugin_version = '1.0.6';
+        var $plugin_version = '1.0.7';
         var $plugin_url;
         var $plugin_path;
         function __construct()
@@ -30,20 +30,20 @@ if(!class_exists('SELL_PHOTO'))
         }
         function plugin_includes()
         {
-            if(is_admin())
-            {
-                add_filter('plugin_action_links', array($this,'add_plugin_action_links'), 10, 2 );
-            }
             add_action('admin_menu', array($this, 'add_options_menu' ));
             add_filter('post_gallery', 'sell_photo_gallery', 10, 3);
         }
         function loader_operations()
         {
             register_activation_hook( __FILE__, array($this, 'activate_handler') );
-            add_action('plugins_loaded',array($this, 'plugins_loaded_handler'));
+            add_action('plugins_loaded', array($this, 'plugins_loaded_handler'));
         }
         function plugins_loaded_handler()  //Runs when plugins_loaded action gets fired
         {
+            if(is_admin() && current_user_can('manage_options'))
+            {
+                add_filter('plugin_action_links', array($this,'add_plugin_action_links'), 10, 2 );
+            }
             load_plugin_textdomain('sell-photo', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/'); 
             $this->check_upgrade();
         }

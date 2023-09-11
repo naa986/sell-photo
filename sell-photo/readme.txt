@@ -1,10 +1,10 @@
 === Sell Photo ===
 Contributors: naa986
 Donate link: https://noorsplugin.com/
-Tags: e-commerce, ecommerce, sales, sell, store
+Tags: paypal, image, photo, gallery, ecommerce
 Requires at least: 6.3
 Tested up to: 6.3
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -64,6 +64,9 @@ For screenshots please visit the [WordPress Sell Photo](https://noorsplugin.com/
 none
 
 == Changelog ==
+
+= 1.0.7 =
+* Additional check for the settings link.
 
 = 1.0.6 =
 * WordPress 6.3 compatibility update.
